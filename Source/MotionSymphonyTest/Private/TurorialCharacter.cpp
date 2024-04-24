@@ -6,21 +6,61 @@
 #include "Components/TrajectoryGenerator.h"
 #include "Components/TrajectoryErrorWarping.h"
 #include "Components/DistanceMatching.h"
+#include "Components/CapsuleComponent.h"
 #include "Enumerations/EMotionMatchingEnums.h"
 #include "BlueprintGameplayTagLibrary.h"
+#include "Utility/MMBlueprintFunctionLibrary.h"
+#include "Kismet/KismetMathLibrary.h"
+#include "Camera/CameraComponent.h"
+#include "GameFramework/CharacterMovementComponent.h"
+#include "GameFramework/SpringArmComponent.h"
+#include "GameFramework/Controller.h"
+#include "InputActionValue.h"
 
 
 
 // Sets default values
 ATurorialCharacter::ATurorialCharacter()
+	: _inputMapping{nullptr}
+	, _neutralCalibration {nullptr}
+	, _strafeCalibration {nullptr}
+	, _overrideQualityVsResponsiveness {0.5f}
 {
  	// Set this character to call Tick() every frame.  You can turn this off to improve performance if you don't need it.
 	PrimaryActorTick.bCanEverTick = true;
-	//_trajectoryGenerator
+
+	GetCapsuleComponent()->InitCapsuleSize(42.f, 96.0f);
+
+	bUseControllerRotationPitch = false;
+	bUseControllerRotationYaw = false;
+	bUseControllerRotationRoll = false;
+
+	GetCharacterMovement()->bOrientRotationToMovement = true;
+	GetCharacterMovement()->RotationRate = FRotator(0.0f, 500.0f, 0.0f);
+
+	GetCharacterMovement()->JumpZVelocity = 700.f;
+	GetCharacterMovement()->AirControl = 0.35f;
+	GetCharacterMovement()->MaxWalkSpeed = 500.f;
+	GetCharacterMovement()->MinAnalogWalkSpeed = 20.f;
+	GetCharacterMovement()->BrakingDecelerationWalking = 2000.f;
+	GetCharacterMovement()->BrakingDecelerationFalling = 1500.0f;
+
+	_cameraBoom = CreateDefaultSubobject<USpringArmComponent>(TEXT("CameraBoom"));
+	_cameraBoom->SetupAttachment(RootComponent);
+	_cameraBoom->TargetArmLength = 400.0f; 
+	_cameraBoom->bUsePawnControlRotation = true;
+
+	_followCamera = CreateDefaultSubobject<UCameraComponent>(TEXT("FollowCamera"));
+	_followCamera->SetupAttachment(_cameraBoom, USpringArmComponent::SocketName); // Attach the camera to the end of the boom and let the boom adjust to match the controller orientation
+	_followCamera->bUsePawnControlRotation = false;
+
 	_trajectoryGenerator = CreateDefaultSubobject<UTrajectoryGenerator>(TEXT("TestTrajectoryGenerator"));
 	_trajectoryErrorWarping = CreateDefaultSubobject<UTrajectoryErrorWarping>(TEXT("TestTrajectoryErrorWarping"));
+	_trajectoryErrorWarping->WarpMode = ETrajectoryErrorWarpMode::Standard;
+	_trajectoryErrorWarping->WarpRate = 60.0f;
+	_trajectoryErrorWarping->MinTrajectoryLength = 50.0f;
+	_trajectoryErrorWarping->ErrorActivationRange = FVector2D(0.25f, 30.0f);
 	_distanceMatching = CreateDefaultSubobject<UDistanceMatching>(TEXT("TestDistanceMatching"));
-
 }
 
 // Called when the game starts or when spawned
@@ -28,20 +68,136 @@ void ATurorialCharacter::BeginPlay()
 {
 	Super::BeginPlay();
 	
+	BeginNeutral();
+	BeginRun();
 }
 
 void ATurorialCharacter::BeginNeutral()
 {
-	SetStyleTag(UGameplayTagsManager::Get().RequestGameplayTag(TEXT("Motion.Sytle.Neutral")));
+	auto neutralTag = UGameplayTagsManager::Get().RequestGameplayTag(TEXT("Motion.Sytle.Neutral"));
+	SetStyleTag(neutralTag);
 	_trajectoryGenerator->TrajectoryBehaviour = ETrajectoryMoveMode::Standard;
 	_trajectoryErrorWarping->SetMode(ETrajectoryErrorWarpMode::Standard, 60.0f, 50.0f, 0.25f, 30.0f);
 }
+
+void ATurorialCharacter::BeginRun()
+{
+	SetSpeedTag(UGameplayTagsManager::Get().RequestGameplayTag(TEXT("Motion.Speed.Run")));
+	if (_trajectoryGenerator)
+	{
+		_trajectoryGenerator->MaxSpeed = 475.0f;
+		_trajectoryGenerator->MoveResponse = 8.0f;
+		_trajectoryGenerator->TurnResponse = 12.0f;
+	}
+
+	_overrideQualityVsResponsiveness = 0.5f;
+
+	_neutralCalibration = nullptr;
+}
+
+void ATurorialCharacter::BeginWalk()
+{
+	SetSpeedTag(UGameplayTagsManager::Get().RequestGameplayTag(TEXT("Motion.Speed.Walk")));
+	if (_trajectoryGenerator)
+	{
+		_trajectoryGenerator->MaxSpeed = 215.0f;
+		_trajectoryGenerator->MoveResponse = 9.0f;
+		_trajectoryGenerator->TurnResponse = 8.0f;
+	}
+
+	_overrideQualityVsResponsiveness = 0.5f;
+
+	//_neutralCalibration = nullptr;
+}
+
+void ATurorialCharacter::BeginSprint()
+{
+	auto strafeTag = UGameplayTagsManager::Get().RequestGameplayTag(TEXT("Motion.Sytle.Strafe"));
+	if (_styleTag != strafeTag)
+	{
+		auto sprintTag = UGameplayTagsManager::Get().RequestGameplayTag(TEXT("Motion.Speed.Sprint"));
+		SetSpeedTag(sprintTag);
+
+		if (_trajectoryGenerator)
+		{
+			_trajectoryGenerator->MaxSpeed = 650.0f;
+			_trajectoryGenerator->MoveResponse = 6.0f;
+			_trajectoryGenerator->TurnResponse = 10.0f;
+		}
+
+		_overrideQualityVsResponsiveness = 0.45f;
+
+		_neutralCalibration = nullptr;
+	}
+}
+
+void ATurorialCharacter::BeginStrafe()
+{
+	auto strafeTag = UGameplayTagsManager::Get().RequestGameplayTag(TEXT("Motion.Sytle.Strafe"));
+	SetStyleTag(strafeTag);
+
+	if (_speedTag == UGameplayTagsManager::Get().RequestGameplayTag(TEXT("Motion.Speed.Sprint")))
+	{
+		BeginRun();
+	}
+
+	if (_trajectoryGenerator)
+	{
+		_trajectoryGenerator->TrajectoryBehaviour = ETrajectoryMoveMode::Strafe;
+	}
+
+	if (_trajectoryErrorWarping)
+	{
+		_trajectoryErrorWarping->SetMode(ETrajectoryErrorWarpMode::Strafe, 90.0f, 50.0f, 2.0f, 180.0f);
+	}
+
+}
+
+void ATurorialCharacter::RemoveInputMapping(AController* pc)
+{
+	UE_LOG(LogTemp, Warning, TEXT("RemoveInputMapping"));
+	if (!IsValid(pc)) return;
+
+	if (!pc->IsLocalPlayerController()) return;
+
+	auto c = Cast<ATurorialPlayerController>(pc);
+	auto subSystem = ULocalPlayer::GetSubsystem<UEnhancedInputLocalPlayerSubsystem>(c->GetLocalPlayer());
+	if (!IsValid(subSystem)) return;
+
+	subSystem->RemoveMappingContext(_inputMapping);
+}
+
+void ATurorialCharacter::AddInputMapping(AController* pc)
+{
+	UE_LOG(LogTemp, Warning, TEXT("AddInputMapping"));
+	if (!IsValid(pc)) return;
+
+	if (pc->IsLocalPlayerController())
+	{
+		auto c = Cast<ATurorialPlayerController>(pc);
+		auto subSystem = ULocalPlayer::GetSubsystem<UEnhancedInputLocalPlayerSubsystem>(c->GetLocalPlayer());
+		if (!IsValid(subSystem)) return;
+		subSystem->AddMappingContext(_inputMapping, 0);
+	}
+}
+
 
 void ATurorialCharacter::SetStyleTag(FGameplayTag tag)
 {
 	UBlueprintGameplayTagLibrary::RemoveGameplayTag(_locomotionTags, _styleTag);
 	_styleTag = tag;
+	
 	UBlueprintGameplayTagLibrary::AddGameplayTag(_locomotionTags, _styleTag);
+}
+
+void ATurorialCharacter::SetSpeedTag(FGameplayTag tag)
+{
+	//std::string log(TCHAR_TO_UTF8(*(tag.GetTagName().ToString())));
+	UE_LOG(LogTemp, Warning, TEXT("Set Speed Tag %s"), *(tag.GetTagName().ToString()));
+
+	UBlueprintGameplayTagLibrary::RemoveGameplayTag(_locomotionTags, _speedTag);
+	_speedTag = tag;
+	UBlueprintGameplayTagLibrary::AddGameplayTag(_locomotionTags, _speedTag);
 }
 
 // Called every frame
@@ -63,6 +219,15 @@ void ATurorialCharacter::SetupPlayerInputComponent(UInputComponent* PlayerInputC
 		subSystem->ClearAllMappings();
 		subSystem->AddMappingContext(_inputMapping, 0);
 	}
+}
 
+void ATurorialCharacter::Move(FVector2D inputVector)
+{
+	auto cameraComponent = this->FindComponentByClass<UCameraComponent>();
+	if (!cameraComponent) return;
 
+	auto vec = UMMBlueprintFunctionLibrary::GetVectorRelativeToCamera(inputVector.Y, inputVector.X, cameraComponent);
+	AddMovementInput(vec);
+	if (!_trajectoryGenerator) return;
+	_trajectoryGenerator->SetTrajectoryInput(vec.X, vec.Y);
 }

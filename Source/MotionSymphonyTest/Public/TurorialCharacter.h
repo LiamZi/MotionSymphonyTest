@@ -5,7 +5,7 @@
 #include "CoreMinimal.h"
 #include "GameFramework/Character.h"
 #include "GameplayTagsClasses.h"
-
+#include "Objects/Assets/MotionCalibration.h"
 #include "TurorialCharacter.generated.h"
 
 
@@ -13,6 +13,7 @@ class UInputMappingContext;
 class UTrajectoryGenerator;
 class UTrajectoryErrorWarping;
 class UDistanceMatching;
+class UMotionCalibration;
 
 UCLASS()
 class MOTIONSYMPHONYTEST_API ATurorialCharacter : public ACharacter
@@ -23,15 +24,37 @@ public:
 	// Sets default values for this character's properties
 	ATurorialCharacter();
 
+	UFUNCTION(BlueprintCallable)
+	void BeginNeutral();
+
+	UFUNCTION(BlueprintCallable)
+	void BeginRun();
+
+	UFUNCTION(BlueprintCallable)
+	void BeginWalk();
+
+	UFUNCTION(BlueprintCallable)
+	void BeginSprint();
+
+	UFUNCTION(BlueprintCallable)
+	void BeginStrafe();
+
+	UFUNCTION(BlueprintCallable)
+	void RemoveInputMapping(AController* pc);
+
+	UFUNCTION(BlueprintCallable)
+	void AddInputMapping(AController* pc);
+
+
 protected:
 	// Called when the game starts or when spawned
 	virtual void BeginPlay() override;
 
-	UFUNCTION(BlueprintCallable)
-	void BeginNeutral();
-
 	UFUNCTION(BlueprintCallable, Category = "Locomotion Tag Management")
 	void SetStyleTag(FGameplayTag tag);
+
+	UFUNCTION(BlueprintCallable, Category = "Locomotion Tag Management")
+	void SetSpeedTag(FGameplayTag tag);
 
 public:	
 	// Called every frame
@@ -40,12 +63,21 @@ public:
 	// Called to bind functionality to input
 	virtual void SetupPlayerInputComponent(class UInputComponent* PlayerInputComponent) override;
 
+	UFUNCTION(BlueprintCallable, Category = "Input")
+	void Move(FVector2D inputVector);
+
+	FORCEINLINE class USpringArmComponent* GetCameraBoom() const { return _cameraBoom; }
+	FORCEINLINE class UCameraComponent* GetFollowCamera() const { return _followCamera; }
+
 protected:
 	UPROPERTY(EditDefaultsOnly, BlueprintReadOnly, Category = "EnhancedInput")
 	UInputMappingContext* _inputMapping;
 
 	UPROPERTY(EditDefaultsOnly, BlueprintReadWrite, Category = "Gameplay Tags")
 	FGameplayTag _styleTag;
+
+	UPROPERTY(EditDefaultsOnly, BlueprintReadWrite, Category = "Gameplay Tags")
+	FGameplayTag _speedTag;
 
 	UPROPERTY(EditDefaultsOnly, BlueprintReadWrite, Category = "Default");
 	UTrajectoryGenerator *_trajectoryGenerator;
@@ -56,6 +88,22 @@ protected:
 	UPROPERTY(EditDefaultsOnly, BlueprintReadWrite, Category = "Default");
 	UDistanceMatching* _distanceMatching;
 
-	UPROPERTY(EditDefaultsOnly, BlueprintReadOnly, Category = "Gameplay Tags")
+	UPROPERTY(EditDefaultsOnly, BlueprintReadWrite, Category = "Gameplay Tags")
 	FGameplayTagContainer _locomotionTags;
+
+	UPROPERTY(EditDefaultsOnly, BlueprintReadWrite, Category = "Motion Matching")
+	float _overrideQualityVsResponsiveness;
+
+	UPROPERTY(EditDefaultsOnly, BlueprintReadWrite, Category = "Motion Matching")
+	UMotionCalibration *_neutralCalibration;
+
+	UPROPERTY(EditDefaultsOnly, BlueprintReadWrite, Category = "Motion Matching")
+	UMotionCalibration *_strafeCalibration;
+
+	UPROPERTY(VisibleAnywhere, BlueprintReadOnly, Category = Camera, meta = (AllowPrivateAccess = "true"))
+	USpringArmComponent* _cameraBoom;
+
+	UPROPERTY(VisibleAnywhere, BlueprintReadOnly, Category = Camera, meta = (AllowPrivateAccess = "true"))
+	UCameraComponent* _followCamera;
+	
 };
