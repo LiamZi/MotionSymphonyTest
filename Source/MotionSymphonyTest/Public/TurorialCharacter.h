@@ -57,6 +57,8 @@ public:
 	UFUNCTION(BlueprintPure)
 	FRotator GetLastFrameRotation() const;
 
+	UFUNCTION(BlueprintCallable, BlueprintNativeEvent)
+	void OnSetTrajectoryInputVector_Multicast(float x, float y);
 
 protected:
 	// Called when the game starts or when spawned
@@ -93,8 +95,9 @@ public:
 	FRotator UndoModelRotation();
 
 private:
-	void ApplyTrajectoryErrorWarping();
+	void ApplyTrajectoryErrorWarping(float deltaTime);
 	void SetStrafeDirectionFromCamera();
+	void SetRootMotionState();
 
 
 protected:

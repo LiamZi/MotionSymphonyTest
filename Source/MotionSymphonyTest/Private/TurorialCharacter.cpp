@@ -21,10 +21,10 @@
 
 // Sets default values
 ATurorialCharacter::ATurorialCharacter()
-	: _inputMapping{nullptr}
-	, _neutralCalibration {nullptr}
-	, _strafeCalibration {nullptr}
-	, _overrideQualityVsResponsiveness {0.5f}
+	: _overrideQualityVsResponsiveness {0.5f}
+	, _inputMapping{ nullptr }
+	, _neutralCalibration{ nullptr }
+	, _strafeCalibration{ nullptr }
 {
  	// Set this character to call Tick() every frame.  You can turn this off to improve performance if you don't need it.
 	PrimaryActorTick.bCanEverTick = true;
@@ -201,6 +201,15 @@ FRotator ATurorialCharacter::GetLastFrameRotation() const
 	return _lastFrameRotation;
 }
 
+void ATurorialCharacter::OnSetTrajectoryInputVector_Multicast_Implementation(float x, float y)
+{
+	auto isLocally = IsLocallyControlled();
+	if (isLocally) return;
+
+	if (!_trajectoryGenerator) return;
+	_trajectoryGenerator->SetTrajectoryInput(x, y);
+}
+
 
 void ATurorialCharacter::SetStyleTag(FGameplayTag tag)
 {
@@ -223,6 +232,10 @@ void ATurorialCharacter::SetSpeedTag(FGameplayTag tag)
 void ATurorialCharacter::Tick(float DeltaTime)
 {
 	Super::Tick(DeltaTime);
+
+	ApplyTrajectoryErrorWarping(DeltaTime);
+	SetStrafeDirectionFromCamera();
+	SetRootMotionState();
 }
 
 // Called to bind functionality to input
@@ -271,13 +284,58 @@ void ATurorialCharacter::DisableRootMotion()
 
 FRotator ATurorialCharacter::UndoModelRotation()
 {
-	return FRotator();
+	auto mesh = GetMesh();
+	if (!IsValid(mesh)) return FRotator();
+
+	auto r = GetActorRotation();
+	auto normalizedRotation = UKismetMathLibrary::NormalizedDeltaRotator(r, _lastFrameRotation);
+	auto yawRotation = UKismetMathLibrary::MakeRotator(0.0f, 0.0f, normalizedRotation.Yaw);
+	auto invertRotator = UKismetMathLibrary::NegateRotator(yawRotation);
+
+
+	mesh->AddLocalRotation(invertRotator);
+
+	_lastFrameRotation = GetActorRotation();
+
+	return _lastFrameRotation;
 }
 
-void ATurorialCharacter::ApplyTrajectoryErrorWarping()
+void ATurorialCharacter::ApplyTrajectoryErrorWarping(float deltaTime)
 {
+	if (!_trajectoryGenerator || !_trajectoryErrorWarping) return;
+
+	auto hasMoveInput = _trajectoryGenerator->HasMoveInput();
+	if (!hasMoveInput) return;
+
+	_trajectoryErrorWarping->ApplyTrajectoryErrorWarping(deltaTime, 1.0f);
 }
 
 void ATurorialCharacter::SetStrafeDirectionFromCamera()
 {
+	if (!_trajectoryGenerator) return;
+
+	if (!(_trajectoryGenerator->TrajectoryBehaviour == ETrajectoryMoveMode::Strafe)) return;
+
+	if (!_followCamera) return;
+	
+	_trajectoryGenerator->StrafeDirection = _followCamera->GetForwardVector();
+	_trajectoryGenerator->StrafeDirection.Z = 0.0f;
+
+	_trajectoryGenerator->StrafeDirection.Normalize();
+}
+
+void ATurorialCharacter::SetRootMotionState()
+{
+	auto isFalling = GetCharacterMovement()->IsFalling();
+	if (_useRootMotion)
+	{
+		if (!isFalling) return;
+
+		DisableRootMotion();
+	}
+	else
+	{
+		if (isFalling) return;
+		EnbleRootMotion();
+	}
 }
