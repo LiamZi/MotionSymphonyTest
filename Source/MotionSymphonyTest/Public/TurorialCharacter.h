@@ -45,6 +45,18 @@ public:
 	UFUNCTION(BlueprintCallable)
 	void AddInputMapping(AController* pc);
 
+	UFUNCTION(BlueprintCallable)
+	const void SetUseRootMotion(bool isUsed);
+
+	UFUNCTION(BlueprintPure)
+	bool GetUseRootMotion() const;
+
+	UFUNCTION(BlueprintCallable)
+	const void SetLastFrameRotation(FRotator rotation);
+
+	UFUNCTION(BlueprintPure)
+	FRotator GetLastFrameRotation() const;
+
 
 protected:
 	// Called when the game starts or when spawned
@@ -55,6 +67,8 @@ protected:
 
 	UFUNCTION(BlueprintCallable, Category = "Locomotion Tag Management")
 	void SetSpeedTag(FGameplayTag tag);
+
+
 
 public:	
 	// Called every frame
@@ -68,6 +82,20 @@ public:
 
 	FORCEINLINE class USpringArmComponent* GetCameraBoom() const { return _cameraBoom; }
 	FORCEINLINE class UCameraComponent* GetFollowCamera() const { return _followCamera; }
+
+	UFUNCTION(BlueprintCallable, Category = "Root Motion")
+	void EnbleRootMotion();
+
+	UFUNCTION(BlueprintCallable, Category = "Root Motion")
+	void DisableRootMotion();
+
+	UFUNCTION(BlueprintCallable, Category = "Experimental")
+	FRotator UndoModelRotation();
+
+private:
+	void ApplyTrajectoryErrorWarping();
+	void SetStrafeDirectionFromCamera();
+
 
 protected:
 	UPROPERTY(EditDefaultsOnly, BlueprintReadOnly, Category = "EnhancedInput")
@@ -105,5 +133,11 @@ protected:
 
 	UPROPERTY(VisibleAnywhere, BlueprintReadOnly, Category = Camera, meta = (AllowPrivateAccess = "true"))
 	UCameraComponent* _followCamera;
+
+	UPROPERTY(EditDefaultsOnly, BlueprintReadWrite)
+	bool _useRootMotion;
+
+	UPROPERTY(EditDefaultsOnly, BlueprintReadWrite)
+	FRotator _lastFrameRotation;
 	
 };

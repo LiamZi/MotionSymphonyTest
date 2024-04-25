@@ -181,6 +181,26 @@ void ATurorialCharacter::AddInputMapping(AController* pc)
 	}
 }
 
+const void ATurorialCharacter::SetUseRootMotion(bool isUsed)
+{
+	_useRootMotion = isUsed;
+}
+
+bool ATurorialCharacter::GetUseRootMotion() const
+{
+	return _useRootMotion;
+}
+
+const void ATurorialCharacter::SetLastFrameRotation(FRotator rotation)
+{
+	_lastFrameRotation = rotation;
+}
+
+FRotator ATurorialCharacter::GetLastFrameRotation() const
+{
+	return _lastFrameRotation;
+}
+
 
 void ATurorialCharacter::SetStyleTag(FGameplayTag tag)
 {
@@ -192,7 +212,6 @@ void ATurorialCharacter::SetStyleTag(FGameplayTag tag)
 
 void ATurorialCharacter::SetSpeedTag(FGameplayTag tag)
 {
-	//std::string log(TCHAR_TO_UTF8(*(tag.GetTagName().ToString())));
 	UE_LOG(LogTemp, Warning, TEXT("Set Speed Tag %s"), *(tag.GetTagName().ToString()));
 
 	UBlueprintGameplayTagLibrary::RemoveGameplayTag(_locomotionTags, _speedTag);
@@ -204,7 +223,6 @@ void ATurorialCharacter::SetSpeedTag(FGameplayTag tag)
 void ATurorialCharacter::Tick(float DeltaTime)
 {
 	Super::Tick(DeltaTime);
-
 }
 
 // Called to bind functionality to input
@@ -230,4 +248,36 @@ void ATurorialCharacter::Move(FVector2D inputVector)
 	AddMovementInput(vec);
 	if (!_trajectoryGenerator) return;
 	_trajectoryGenerator->SetTrajectoryInput(vec.X, vec.Y);
+}
+
+void ATurorialCharacter::EnbleRootMotion()
+{
+	auto animInstance = GetMesh()->GetAnimInstance();
+	if (!IsValid(animInstance)) return;
+
+	animInstance->SetRootMotionMode(ERootMotionMode::RootMotionFromEverything);
+
+	_useRootMotion = true;
+}
+
+void ATurorialCharacter::DisableRootMotion()
+{
+	auto animInstance = GetMesh()->GetAnimInstance();
+	if (!IsValid(animInstance)) return;
+
+	animInstance->SetRootMotionMode(ERootMotionMode::RootMotionFromMontagesOnly);
+	_useRootMotion = false;
+}
+
+FRotator ATurorialCharacter::UndoModelRotation()
+{
+	return FRotator();
+}
+
+void ATurorialCharacter::ApplyTrajectoryErrorWarping()
+{
+}
+
+void ATurorialCharacter::SetStrafeDirectionFromCamera()
+{
 }
