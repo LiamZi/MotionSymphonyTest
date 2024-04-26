@@ -94,6 +94,12 @@ public:
 	UFUNCTION(BlueprintCallable, Category = "Experimental")
 	FRotator UndoModelRotation();
 
+	UFUNCTION(BlueprintCallable, BlueprintPure, Category = "Locomotion Tag Management")
+	const FGameplayTag& GetSpeedTag() const;
+
+	UFUNCTION(BlueprintCallable, BlueprintPure, Category = "Locomotion Tag Management")
+	const FGameplayTag& GetStyleTag() const;
+
 private:
 	void ApplyTrajectoryErrorWarping(float deltaTime);
 	void SetStrafeDirectionFromCamera();
@@ -101,7 +107,7 @@ private:
 
 
 protected:
-	UPROPERTY(EditDefaultsOnly, BlueprintReadOnly, Category = "EnhancedInput")
+	UPROPERTY(EditDefaultsOnly, BlueprintReadOnly, Category = "Enhanced Input")
 	UInputMappingContext* _inputMapping;
 
 	UPROPERTY(EditDefaultsOnly, BlueprintReadWrite, Category = "Gameplay Tags")
@@ -142,5 +148,7 @@ protected:
 
 	UPROPERTY(EditDefaultsOnly, BlueprintReadWrite)
 	FRotator _lastFrameRotation;
+
+
 
 };

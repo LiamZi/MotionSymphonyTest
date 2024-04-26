@@ -16,6 +16,7 @@
 #include "GameFramework/SpringArmComponent.h"
 #include "GameFramework/Controller.h"
 #include "InputActionValue.h"
+#include "TurorialPlayerController.h"
 
 
 
@@ -25,6 +26,12 @@ ATurorialCharacter::ATurorialCharacter()
 	, _inputMapping{ nullptr }
 	, _neutralCalibration{ nullptr }
 	, _strafeCalibration{ nullptr }
+	, _useRootMotion{ false }
+	, _cameraBoom{ nullptr }
+	, _followCamera{ nullptr }
+	, _trajectoryGenerator{ nullptr }
+	, _trajectoryErrorWarping{ nullptr }
+	, _distanceMatching{ nullptr }
 {
 	// Set this character to call Tick() every frame.  You can turn this off to improve performance if you don't need it.
 	PrimaryActorTick.bCanEverTick = true;
@@ -35,15 +42,16 @@ ATurorialCharacter::ATurorialCharacter()
 	bUseControllerRotationYaw = false;
 	bUseControllerRotationRoll = false;
 
-	GetCharacterMovement()->bOrientRotationToMovement = true;
-	GetCharacterMovement()->RotationRate = FRotator(0.0f, 500.0f, 0.0f);
+	auto characterMovement = GetCharacterMovement();
+	characterMovement->bOrientRotationToMovement = true;
+	characterMovement->RotationRate = FRotator(0.0f, 500.0f, 0.0f);
 
-	GetCharacterMovement()->JumpZVelocity = 700.f;
-	GetCharacterMovement()->AirControl = 0.35f;
-	GetCharacterMovement()->MaxWalkSpeed = 500.f;
-	GetCharacterMovement()->MinAnalogWalkSpeed = 20.f;
-	GetCharacterMovement()->BrakingDecelerationWalking = 2000.f;
-	GetCharacterMovement()->BrakingDecelerationFalling = 1500.0f;
+	characterMovement->JumpZVelocity = 700.f;
+	characterMovement->AirControl = 0.35f;
+	characterMovement->MaxWalkSpeed = 500.f;
+	characterMovement->MinAnalogWalkSpeed = 20.f;
+	characterMovement->BrakingDecelerationWalking = 2000.f;
+	characterMovement->BrakingDecelerationFalling = 1500.0f;
 
 	_cameraBoom = CreateDefaultSubobject<USpringArmComponent>(TEXT("CameraBoom"));
 	_cameraBoom->SetupAttachment(RootComponent);
@@ -243,13 +251,17 @@ void ATurorialCharacter::SetupPlayerInputComponent(UInputComponent* PlayerInputC
 {
 	Super::SetupPlayerInputComponent(PlayerInputComponent);
 
-	auto pc = Cast<APlayerController>(GetController());
+	auto pc = Cast<ATurorialPlayerController>(GetController());
 	if (pc != nullptr && pc->IsLocalPlayerController())
 	{
 		auto subSystem = ULocalPlayer::GetSubsystem<UEnhancedInputLocalPlayerSubsystem>(pc->GetLocalPlayer());
 		subSystem->ClearAllMappings();
 		subSystem->AddMappingContext(_inputMapping, 0);
+
+		pc->SetupPlayerInputComponent(PlayerInputComponent);
 	}
+
+
 }
 
 void ATurorialCharacter::Move(FVector2D inputVector)
@@ -298,6 +310,16 @@ FRotator ATurorialCharacter::UndoModelRotation()
 	_lastFrameRotation = GetActorRotation();
 
 	return _lastFrameRotation;
+}
+
+const FGameplayTag& ATurorialCharacter::GetSpeedTag() const
+{
+	return _speedTag;
+}
+
+const FGameplayTag& ATurorialCharacter::GetStyleTag() const
+{
+	return _styleTag;
 }
 
 void ATurorialCharacter::ApplyTrajectoryErrorWarping(float deltaTime)

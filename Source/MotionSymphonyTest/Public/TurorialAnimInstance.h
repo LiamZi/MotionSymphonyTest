@@ -58,8 +58,6 @@ private:
 	void SetMCVelocityAndGroundSpeed();
 	void SetIsFalling();
 	
-
-
 protected:
 	UPROPERTY(EditDefaultsOnly, BlueprintReadWrite, Category = "LocomotionState")
 	FVector _velocity;
