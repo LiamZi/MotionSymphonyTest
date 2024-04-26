@@ -21,12 +21,12 @@
 
 // Sets default values
 ATurorialCharacter::ATurorialCharacter()
-	: _overrideQualityVsResponsiveness {0.5f}
+	: _overrideQualityVsResponsiveness{ 0.5f }
 	, _inputMapping{ nullptr }
 	, _neutralCalibration{ nullptr }
 	, _strafeCalibration{ nullptr }
 {
- 	// Set this character to call Tick() every frame.  You can turn this off to improve performance if you don't need it.
+	// Set this character to call Tick() every frame.  You can turn this off to improve performance if you don't need it.
 	PrimaryActorTick.bCanEverTick = true;
 
 	GetCapsuleComponent()->InitCapsuleSize(42.f, 96.0f);
@@ -47,7 +47,7 @@ ATurorialCharacter::ATurorialCharacter()
 
 	_cameraBoom = CreateDefaultSubobject<USpringArmComponent>(TEXT("CameraBoom"));
 	_cameraBoom->SetupAttachment(RootComponent);
-	_cameraBoom->TargetArmLength = 400.0f; 
+	_cameraBoom->TargetArmLength = 400.0f;
 	_cameraBoom->bUsePawnControlRotation = true;
 
 	_followCamera = CreateDefaultSubobject<UCameraComponent>(TEXT("FollowCamera"));
@@ -67,7 +67,7 @@ ATurorialCharacter::ATurorialCharacter()
 void ATurorialCharacter::BeginPlay()
 {
 	Super::BeginPlay();
-	
+
 	BeginNeutral();
 	BeginRun();
 }
@@ -215,7 +215,7 @@ void ATurorialCharacter::SetStyleTag(FGameplayTag tag)
 {
 	UBlueprintGameplayTagLibrary::RemoveGameplayTag(_locomotionTags, _styleTag);
 	_styleTag = tag;
-	
+
 	UBlueprintGameplayTagLibrary::AddGameplayTag(_locomotionTags, _styleTag);
 }
 
@@ -317,7 +317,7 @@ void ATurorialCharacter::SetStrafeDirectionFromCamera()
 	if (!(_trajectoryGenerator->TrajectoryBehaviour == ETrajectoryMoveMode::Strafe)) return;
 
 	if (!_followCamera) return;
-	
+
 	_trajectoryGenerator->StrafeDirection = _followCamera->GetForwardVector();
 	_trajectoryGenerator->StrafeDirection.Z = 0.0f;
 

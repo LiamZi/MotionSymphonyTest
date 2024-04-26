@@ -7,13 +7,13 @@
 #include "TurorialGameMode.generated.h"
 
 /**
- * 
+ *
  */
 UCLASS()
 class MOTIONSYMPHONYTEST_API ATurorialGameMode : public AGameModeBase
 {
 	GENERATED_BODY()
-	
+
 public:
 	ATurorialGameMode();
 };

@@ -72,7 +72,7 @@ protected:
 
 
 
-public:	
+public:
 	// Called every frame
 	virtual void Tick(float DeltaTime) override;
 
@@ -111,7 +111,7 @@ protected:
 	FGameplayTag _speedTag;
 
 	UPROPERTY(EditDefaultsOnly, BlueprintReadWrite, Category = "Default");
-	UTrajectoryGenerator *_trajectoryGenerator;
+	UTrajectoryGenerator* _trajectoryGenerator;
 
 	UPROPERTY(EditDefaultsOnly, BlueprintReadWrite, Category = "Default");
 	UTrajectoryErrorWarping* _trajectoryErrorWarping;
@@ -126,10 +126,10 @@ protected:
 	float _overrideQualityVsResponsiveness;
 
 	UPROPERTY(EditDefaultsOnly, BlueprintReadWrite, Category = "Motion Matching")
-	UMotionCalibration *_neutralCalibration;
+	UMotionCalibration* _neutralCalibration;
 
 	UPROPERTY(EditDefaultsOnly, BlueprintReadWrite, Category = "Motion Matching")
-	UMotionCalibration *_strafeCalibration;
+	UMotionCalibration* _strafeCalibration;
 
 	UPROPERTY(VisibleAnywhere, BlueprintReadOnly, Category = Camera, meta = (AllowPrivateAccess = "true"))
 	USpringArmComponent* _cameraBoom;
@@ -142,5 +142,5 @@ protected:
 
 	UPROPERTY(EditDefaultsOnly, BlueprintReadWrite)
 	FRotator _lastFrameRotation;
-	
+
 };
