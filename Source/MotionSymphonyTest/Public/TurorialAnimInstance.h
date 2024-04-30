@@ -6,6 +6,7 @@
 #include "Animation/AnimInstance.h"
 #include "Data/InputProfile.h"
 #include "Data/Trajectory.h"
+#include "AnimCommon/FestivalCommon.h"
 #include "TurorialAnimInstance.generated.h"
 
 /**
@@ -24,103 +25,117 @@ class UCharacterMovementComponent;
 UCLASS()
 class MOTIONSYMPHONYTEST_API UTurorialAnimInstance : public UAnimInstance
 {
-	GENERATED_BODY()
+    GENERATED_BODY()
 
 public:
-	UTurorialAnimInstance();
+    UTurorialAnimInstance();
 
-	UFUNCTION(BlueprintCallable, Category = "Motion Matching")
-	void SetupMotionMatching();
+    UFUNCTION(BlueprintCallable, Category = "Motion Matching")
+    void SetupMotionMatching();
 
-	UFUNCTION(BlueprintCallable, Category = "Setup Character")
-	void SetupMotionMatchingAndMode();
+    UFUNCTION(BlueprintCallable, Category = "Setup Character")
+    void SetupMotionMatchingAndMode();
 
-	UFUNCTION(BlueprintCallable, Category = "Setup Character")
-	void SetupCharcterMovent();
+    UFUNCTION(BlueprintCallable, Category = "Setup Character")
+    void SetupCharcterMovent();
 
-	UFUNCTION(BlueprintCallable, Category = "Setup Character")
-	void SetupCharcterDetail();
+    UFUNCTION(BlueprintCallable, Category = "Setup Character")
+    void SetupCharcterDetail();
 
-	UFUNCTION(BlueprintCallable, Category = "Tick Anim")
-	void TickAnimation();
+    UFUNCTION(BlueprintCallable, Category = "Tick Anim")
+    void TickAnimation();
 
-	UFUNCTION(BlueprintCallable, Category = "Tick Anim")
-	void TransitionInAndOutOfIdle();
+    UFUNCTION(BlueprintCallable, Category = "Tick Anim")
+    void TransitionInAndOutOfIdle();
 
-	UFUNCTION(BlueprintCallable, Category = "Tick Anim")
-	void StrafingCheck();
+    UFUNCTION(BlueprintCallable, Category = "Tick Anim")
+    void StrafingCheck();
 
-	UFUNCTION(BlueprintCallable, Category = "Tick Anim")
-	void ConstructInputResponseData();
+    UFUNCTION(BlueprintCallable, Category = "Tick Anim")
+    void ConstructInputResponseData();
 
+protected:
+    virtual void NativeInitializeAnimation() override;
+    virtual void NativeBeginPlay() override;
+    virtual void NativeUpdateAnimation(float DeltaSeconds) override;
 
 private:
-	void SetMCVelocityAndGroundSpeed();
-	void SetIsFalling();
-	
+    void SetMCVelocityAndGroundSpeed();
+    void SetIsFalling();
+
 protected:
-	UPROPERTY(EditDefaultsOnly, BlueprintReadWrite, Category = "LocomotionState")
-	FVector _velocity;
+    UPROPERTY(EditDefaultsOnly, BlueprintReadWrite,
+              Category = "LocomotionState")
+    FVector _velocity;
 
-	UPROPERTY(EditDefaultsOnly, BlueprintReadWrite, Category = "LocomotionState")
-	float _groundSpeed;
+    UPROPERTY(EditDefaultsOnly, BlueprintReadWrite,
+              Category = "LocomotionState")
+    float _groundSpeed;
 
-	UPROPERTY(EditDefaultsOnly, BlueprintReadWrite, Category = "LocomotionState")
-	bool _shouldMove;
+    UPROPERTY(EditDefaultsOnly, BlueprintReadWrite,
+              Category = "LocomotionState")
+    bool _shouldMove;
 
-	UPROPERTY(EditDefaultsOnly, BlueprintReadWrite, Category = "LocomotionState")
-	bool _isFalling;
+    UPROPERTY(EditDefaultsOnly, BlueprintReadWrite,
+              Category = "LocomotionState")
+    bool _isFalling;
 
-	UPROPERTY(EditDefaultsOnly, BlueprintReadWrite, Category = "LocomotionState")
-	bool _hadMoveInputLastFrame;
+    UPROPERTY(EditDefaultsOnly, BlueprintReadWrite,
+              Category = "LocomotionState")
+    bool _hadMoveInputLastFrame;
 
-	UPROPERTY(EditDefaultsOnly, BlueprintReadWrite, Category = "LocomotionState")
-	bool _hasMoveInput;
+    UPROPERTY(EditDefaultsOnly, BlueprintReadWrite,
+              Category = "LocomotionState")
+    bool _hasMoveInput;
 
-	UPROPERTY(EditDefaultsOnly, BlueprintReadWrite, Category = "LocomotionState")
-	bool _shouldBeIdle;
+    UPROPERTY(EditDefaultsOnly, BlueprintReadWrite,
+              Category = "LocomotionState")
+    bool _shouldBeIdle;
 
-	UPROPERTY(EditDefaultsOnly, BlueprintReadWrite, Category = "LocomotionState")
-	bool _isStrafing;
+    UPROPERTY(EditDefaultsOnly, BlueprintReadWrite,
+              Category = "LocomotionState")
+    bool _isStrafing;
 
-	UPROPERTY(EditDefaultsOnly, BlueprintReadWrite, Category = "FootLocking")
-	bool _lockFoot_L;
+    UPROPERTY(EditDefaultsOnly, BlueprintReadWrite, Category = "FootLocking")
+    bool _lockFoot_L;
 
-	UPROPERTY(EditDefaultsOnly, BlueprintReadWrite, Category = "FootLocking")
-	bool _lockFoot_R;
+    UPROPERTY(EditDefaultsOnly, BlueprintReadWrite, Category = "FootLocking")
+    bool _lockFoot_R;
 
-	UPROPERTY(EditDefaultsOnly, BlueprintReadWrite, Category = "IK")
-	float _heelHeight;
+    UPROPERTY(EditDefaultsOnly, BlueprintReadWrite, Category = "IK")
+    float _heelHeight;
 
-	UPROPERTY(EditDefaultsOnly, BlueprintReadWrite, Category = "MotionMatching")
-	UMotionDataAsset* _mmAnimData_NEUTRAL;
+    UPROPERTY(EditDefaultsOnly, BlueprintReadWrite, Category = "MotionMatching")
+    UMotionDataAsset* _mmAnimData_NEUTRAL;
 
-	UPROPERTY(EditDefaultsOnly, BlueprintReadWrite, Category = "MotionMatching")
-	UMotionDataAsset* _mmAnimData_STRAFE;
+    UPROPERTY(EditDefaultsOnly, BlueprintReadWrite, Category = "MotionMatching")
+    UMotionDataAsset* _mmAnimData_STRAFE;
 
-	UPROPERTY(EditDefaultsOnly, BlueprintReadWrite, Category = "MotionMatching")
-	FInputProfile _mmInputProfile;
+    UPROPERTY(EditDefaultsOnly, BlueprintReadWrite, Category = "MotionMatching")
+    FInputProfile _mmInputProfile;
 
-	UPROPERTY(EditDefaultsOnly, BlueprintReadWrite, Category = "MotionMatching")
-	FMotionMatchingInputData _mmInputResponseData;
+    UPROPERTY(EditDefaultsOnly, BlueprintReadWrite, Category = "MotionMatching")
+    FMotionMatchingInputData _mmInputResponseData;
 
-	UPROPERTY(EditDefaultsOnly, BlueprintReadWrite, Category = "MotionMatching")
-	UMotionMatchConfig* _mmAnimConfig;
+    UPROPERTY(EditDefaultsOnly, BlueprintReadWrite, Category = "MotionMatching")
+    UMotionMatchConfig* _mmAnimConfig;
 
-	UPROPERTY(EditDefaultsOnly, BlueprintReadWrite, Category = "MotionMatching")
-	bool _forcePoseSearch;
+    UPROPERTY(EditDefaultsOnly, BlueprintReadWrite, Category = "MotionMatching")
+    bool _forcePoseSearch;
 
-	UPROPERTY(EditDefaultsOnly, BlueprintReadWrite, Category = "References")
-	ATurorialCharacter* _character;
+    UPROPERTY(EditDefaultsOnly, BlueprintReadWrite, Category = "References")
+    ATurorialCharacter* _character;
 
-	UPROPERTY(EditDefaultsOnly, BlueprintReadWrite, Category = "References")
-	UCharacterMovementComponent* _movementComponent;
+    UPROPERTY(EditDefaultsOnly, BlueprintReadWrite, Category = "References")
+    UCharacterMovementComponent* _movementComponent;
 
-	UPROPERTY(EditDefaultsOnly, BlueprintReadWrite, Category = "References")
-	UTrajectoryGenerator* _trajectoryGenerator;
+    UPROPERTY(EditDefaultsOnly, BlueprintReadWrite, Category = "References")
+    UTrajectoryGenerator* _trajectoryGenerator;
 
-	UPROPERTY(EditDefaultsOnly, BlueprintReadWrite, Category = "References")
-	UDistanceMatching* _distanceMatching;
+    UPROPERTY(EditDefaultsOnly, BlueprintReadWrite, Category = "References")
+    UDistanceMatching* _distanceMatching;
 
-
+    UPROPERTY(EditDefaultsOnly, BlueprintReadOnly,
+              Category = "Animation Propertices")
+    WeaponType _weaponTy;
 };

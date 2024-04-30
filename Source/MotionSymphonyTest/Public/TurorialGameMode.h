@@ -12,8 +12,8 @@
 UCLASS()
 class MOTIONSYMPHONYTEST_API ATurorialGameMode : public AGameModeBase
 {
-	GENERATED_BODY()
+    GENERATED_BODY()
 
 public:
-	ATurorialGameMode();
+    ATurorialGameMode();
 };

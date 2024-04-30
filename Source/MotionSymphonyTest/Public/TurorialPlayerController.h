@@ -8,7 +8,6 @@
 #include "EnhancedInputSubsystems.h"
 #include "TurorialPlayerController.generated.h"
 
-
 class UInputDataConfig;
 class ATurorialCharacter;
 class FExec;
@@ -17,36 +16,36 @@ class FExec;
  *
  */
 UCLASS()
-class MOTIONSYMPHONYTEST_API ATurorialPlayerController : public APlayerController
+class MOTIONSYMPHONYTEST_API ATurorialPlayerController
+    : public APlayerController
 {
-	GENERATED_BODY()
+    GENERATED_BODY()
 
 public:
-	ATurorialPlayerController();
+    ATurorialPlayerController();
 
-	void SetupPlayerInputComponent(class UInputComponent* PlayerInputComponent);
+    void SetupPlayerInputComponent(class UInputComponent* PlayerInputComponent);
 
 protected:
-	virtual void OnPossess(APawn* aPawn) override;
+    virtual void OnPossess(APawn* aPawn) override;
 
 private:
-	void Move(const FInputActionValue& value);
-	void Look(const FInputActionValue& value);
-	void Jump();
-	void Walk();
-	void SprintStarted();
-	void SprintEnded();
-	void StrafeStarted();
-	void StrafeEnded();
+    void Move(const FInputActionValue& value);
+    void Look(const FInputActionValue& value);
+    void Jump();
+    void Walk();
+    void SprintStarted();
+    void SprintEnded();
+    void StrafeStarted();
+    void StrafeEnded();
 
 protected:
-	UPROPERTY(EditDefaultsOnly, BlueprintReadOnly, Category = "Enhanced Input")
-	UInputDataConfig* _inputActions;
+    UPROPERTY(EditDefaultsOnly, BlueprintReadOnly, Category = "Enhanced Input")
+    UInputDataConfig* _inputActions;
 
-	UPROPERTY(EditDefaultsOnly, BlueprintReadWrite)
-	bool _isBaseSpeedWalk;
-	
-	UPROPERTY(EditDefaultsOnly, BlueprintReadWrite)
-	ATurorialCharacter* _character;
+    UPROPERTY(EditDefaultsOnly, BlueprintReadWrite)
+    bool _isBaseSpeedWalk;
 
+    UPROPERTY(EditDefaultsOnly, BlueprintReadWrite)
+    ATurorialCharacter* _character;
 };
