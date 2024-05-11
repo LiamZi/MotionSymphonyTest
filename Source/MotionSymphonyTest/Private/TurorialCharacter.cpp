@@ -119,7 +119,7 @@ void ATurorialCharacter::BeginWalk()
         TEXT("Motion.Speed.Walk")));
     if (_trajectoryGenerator)
     {
-        _trajectoryGenerator->MaxSpeed = 215.0f;
+        _trajectoryGenerator->MaxSpeed = 175.0f;
         _trajectoryGenerator->MoveResponse = 9.0f;
         _trajectoryGenerator->TurnResponse = 8.0f;
     }
