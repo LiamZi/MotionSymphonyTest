@@ -8,7 +8,34 @@
 
 #include UE_INLINE_GENERATED_CPP_BY_NAME(MSGameplayCueManager)
 
+enum class EMSEditorLoadMode {
+    // Loads all cues upfront; longer loading speed in the editor but short PIE times and
+    // effects never fail to play
+    LoadUpfront,
+
+    // Outside of editor: Async loads as cue tag are registered
+    // In editor: Async loads when cues are invoked
+    //   Note: This can cause some 'why didn't I see the effect for X' issues in PIE and
+    //   is good for iteration speed but otherwise bad for designers
+    PreloadAsCuesAreReferenced_GameOnly,
+
+    // Async loads as cue tag are registered
+    PreloadAsCuesAreReferenced
+};
+
 const bool PreLoadEventInEditor = true;
+
+namespace MSGameplayCueManagerCvars {
+
+static FAutoConsoleCommand
+    CVarDumpGameplayCues( TEXT( "MS.DumpGameplayCues" ),
+                          TEXT( "Shows all assets that were loaded via "
+                                "MSGameplayCueManager and are currently in memory." ),
+                          FConsoleCommandWithArgsDelegate::CreateStatic(
+                              UMSGameplayCueManager::DumpGameplayCues ) );
+
+static EMSEditorLoadMode LoadMode = EMSEditorLoadMode::LoadUpfront;
+};  // namespace MSGameplayCueManagerCvars
 
 UMSGameplayCueManager::UMSGameplayCueManager( const FObjectInitializer& object )
     : Super{ object } {}
@@ -26,7 +53,24 @@ void UMSGameplayCueManager::OnCreated() {
 
 bool UMSGameplayCueManager::ShouldAsyncLoadRuntimeObjectLibraries() const {
 
-    return false;
+    switch ( MSGameplayCueManagerCvars::LoadMode ) {
+    case EMSEditorLoadMode::LoadUpfront:
+        return true;
+    case EMSEditorLoadMode::PreloadAsCuesAreReferenced_GameOnly:
+#if WITH_EDITOR
+        if (GIsEditor)
+        {
+            return false;
+        }
+#endif
+        break;
+
+        case EMSEditorLoadMode::PreloadAsCuesAreReferenced:
+        break;
+    default:
+        break;
+    }
+    return !ShouldDelayLoadGameplayCues();
 }
 
 bool UMSGameplayCueManager::ShouldSyncLoadMissingGameplayCues() const {
@@ -55,7 +99,6 @@ void UMSGameplayCueManager::LoadAlwaysLoadedCues() {
                         TEXT( "UMSGameplayCueManager::AdditionalAlwaysLoadedCueTags "
                               "contains invalid tag %s" ),
                         *tag.ToString() );
-
             }
         }
     }
